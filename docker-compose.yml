@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  api:
+    build: .
+    ports:
+      - 8082:8082
+      - 5007:5007
+    command: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+    environment:
+      - "SPRING_PROFILES_ACTIVE=local-docker"
+    depends_on:
+      - postgres_db
+    networks:
+      - course_local
+      - course_journal
+  postgres_db:
+    image: "postgres:14.0-alpine"
+    #    volumes:
+    #      - course_data:/var/lib/postgresql/data/ # persist data even if container shuts down
+    environment:
+      POSTGRES_USER: local_user
+      POSTGRES_PASSWORD: local_password
+      POSTGRES_DB: course_journal
+    ports:
+      - 5434:5432
+    networks:
+      - course_journal
+
+#volumes:
+#  course_data:
+
+networks:
+  course_local:
+    name: course_local
+    driver: bridge
+  course_journal:
+    name: course_journal
+    driver: bridge
