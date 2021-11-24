@@ -1,5 +1,6 @@
 package com.goals.course.journal.configuration;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean;
@@ -17,6 +18,7 @@ import java.net.UnknownHostException;
  * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint.html
  * Note! Ensure that this is used in app profiles which are executed on AWS ECS Fargate.
  */
+@Slf4j
 @Component
 @Profile("dev")
 public class CloudConfiguration implements BeanPostProcessor {
@@ -34,14 +36,14 @@ public class CloudConfiguration implements BeanPostProcessor {
         try {
             fargateIp = InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
-            System.out.println("Could not get the Fargate instance ip address.");
+            log.warn("Could not get the Fargate instance ip address.");
         }
     }
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
         if (bean instanceof EurekaInstanceConfigBean instanceConfigBean) {
-            System.out.println("EurekaInstanceConfigBean detected. Setting IP address to " + fargateIp);
+            log.info("EurekaInstanceConfigBean detected. Setting IP address to " + fargateIp);
             instanceConfigBean.setInstanceId(fargateIp + ":" + serviceName + ":" + port);
             instanceConfigBean.setIpAddress(fargateIp);
             instanceConfigBean.setHostname(fargateIp);
