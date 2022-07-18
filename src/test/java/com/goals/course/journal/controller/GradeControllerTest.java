@@ -1,4 +1,4 @@
-package com.goals.course.journal.controller.implementation;
+package com.goals.course.journal.controller;
 
 import com.goals.course.journal.dto.GradeDTO;
 import com.goals.course.journal.service.GradeService;
@@ -7,21 +7,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class GradeControllerImplTest {
+class GradeControllerTest {
 
     @Mock
     private GradeService mockGradeService;
     @InjectMocks
-    private GradeControllerImpl service;
+    private GradeController service;
 
     @Test
     void gradeForLesson_callGradeForLesson() {
@@ -41,13 +42,15 @@ class GradeControllerImplTest {
         // GIVEN
         final var gradeId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         final var gradeDTO = GradeDTO.builder().id(gradeId).build();
-        when(mockGradeService.gradeForLesson(any())).thenReturn(gradeDTO);
+        when(mockGradeService.gradeForLesson(any())).thenReturn(Mono.just(gradeDTO));
 
         // WHEN
-        final var result = service.gradeForLesson(null);
+        final var mono = service.gradeForLesson(null);
 
         // THEN
-        assertThat(result).isSameAs(gradeDTO);
+        StepVerifier.create(mono)
+                .expectNext(gradeDTO)
+                .verifyComplete();
     }
 
 }

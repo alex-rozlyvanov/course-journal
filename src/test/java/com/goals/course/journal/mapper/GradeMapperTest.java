@@ -1,4 +1,4 @@
-package com.goals.course.journal.mapper.implementation;
+package com.goals.course.journal.mapper;
 
 import com.goals.course.journal.dao.entity.GradeEntity;
 import com.goals.course.journal.dto.GradeDTO;
@@ -12,10 +12,10 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-class GradeMapperImplTest {
+class GradeMapperTest {
 
     @InjectMocks
-    private GradeMapperImpl service;
+    private GradeMapper service;
 
     @Test
     void mapToGrade_id_checkResult() {

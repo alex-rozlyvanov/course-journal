@@ -1,4 +1,4 @@
-package com.goals.course.journal.mapper.implementation;
+package com.goals.course.journal.mapper;
 
 import com.goals.course.journal.dao.entity.FileEntity;
 import com.goals.course.journal.exception.FileCannotBeUploaded;
@@ -19,10 +19,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FileMapperImplTest {
+class FileMapperTest {
 
     @InjectMocks
-    private FileMapperImpl service;
+    private FileMapper service;
 
     @Test
     void mapToFileResponse_id_checkResult() {

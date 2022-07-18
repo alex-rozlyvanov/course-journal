@@ -1,30 +1,32 @@
-package com.goals.course.journal.service.implementation;
+package com.goals.course.journal.service;
 
 import com.goals.course.journal.configuration.ManagerURL;
 import com.goals.course.journal.dto.UserDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StudentProviderImplTest {
-    @Mock
-    private RestTemplate mockRestTemplate;
+class StudentProviderTest {
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private WebClient mockWebClient;
     @Mock
     private ManagerURL mockManagerURL;
     @InjectMocks
-    private StudentProviderImpl service;
+    private StudentProvider service;
 
     @Test
     void findStudentById_callStudentById() {
@@ -46,7 +48,7 @@ class StudentProviderImplTest {
         service.findStudentById(null);
 
         // THEN
-        verify(mockRestTemplate).getForObject("test/url", UserDTO.class);
+        verify(mockWebClient.get()).uri("test/url");
     }
 
     @Test
@@ -54,15 +56,19 @@ class StudentProviderImplTest {
         // GIVEN
         when(mockManagerURL.studentById(any())).thenReturn("test/url");
         final var studentDTO = UserDTO.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
-        when(mockRestTemplate.getForObject(anyString(), any())).thenReturn(studentDTO);
+        when(mockWebClient.get()
+                .uri(anyString())
+                .retrieve()
+                .onStatus(any(), any())
+                .bodyToMono(any(Class.class))).thenReturn(Mono.just(studentDTO));
 
         // WHEN
-        final var result = service.findStudentById(null);
+        final var mono = service.findStudentById(null);
 
         // THEN
-        assertThat(result)
-                .isPresent()
-                .get().isSameAs(studentDTO);
+        StepVerifier.create(mono)
+                .expectNext(studentDTO)
+                .verifyComplete();
     }
 
 }

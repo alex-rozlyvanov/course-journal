@@ -1,4 +1,4 @@
-package com.goals.course.journal.service.validation.implementation;
+package com.goals.course.journal.service.validation;
 
 import com.goals.course.journal.dto.GradeDTO;
 import com.goals.course.journal.dto.LessonDTO;
@@ -13,8 +13,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -25,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class GradeValidationImplTest {
+class GradeValidationTest {
 
     @Mock
     private StudentProvider mockStudentProvider;
@@ -33,18 +34,20 @@ class GradeValidationImplTest {
     private LessonProvider mockLessonProvider;
 
     @InjectMocks
-    private GradeValidationImpl service;
+    private GradeValidation service;
 
     @Test
     void validateGrade_callFindStudentById() {
         // GIVEN
         final var studentId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         final var gradeDTO = GradeDTO.builder().studentId(studentId).grade(50).build();
+        when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.empty());
 
         // WHEN
-        service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
+        StepVerifier.create(mono).expectNextCount(1).verifyComplete();
         verify(mockStudentProvider).findStudentById(studentId);
     }
 
@@ -53,14 +56,16 @@ class GradeValidationImplTest {
         // GIVEN
         final var studentId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         final var gradeDTO = GradeDTO.builder().studentId(studentId).grade(50).build();
-        when(mockStudentProvider.findStudentById(any())).thenReturn(Optional.of(UserDTO.builder().build()));
-        when(mockLessonProvider.findLessonById(any())).thenReturn(Optional.of(LessonDTO.builder().build()));
+        when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.just(UserDTO.builder().build()));
+        when(mockLessonProvider.findLessonById(any())).thenReturn(Mono.just(LessonDTO.builder().build()));
 
         // WHEN
-        final var result = service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
-        assertTrue(result.isValid());
+        StepVerifier.create(mono)
+                .assertNext(result -> assertTrue(result.isValid()))
+                .verifyComplete();
     }
 
     @Test
@@ -68,13 +73,18 @@ class GradeValidationImplTest {
         // GIVEN
         final var studentId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         final var gradeDTO = GradeDTO.builder().studentId(studentId).grade(50).build();
+        when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.empty());
 
         // WHEN
-        final var result = service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
-        assertFalse(result.isValid());
-        assertThat(result.getMessage()).isEqualTo("Student '00000000-0000-0000-0000-000000000001' not found!");
+        StepVerifier.create(mono)
+                .assertNext(result -> {
+                    assertFalse(result.isValid());
+                    assertThat(result.getMessage()).isEqualTo("Student '00000000-0000-0000-0000-000000000001' not found!");
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -82,12 +92,14 @@ class GradeValidationImplTest {
         // GIVEN
         final var lessonId = UUID.fromString("00000000-0000-0000-0000-000000000002");
         final var gradeDTO = GradeDTO.builder().lessonId(lessonId).grade(50).build();
-        when(mockStudentProvider.findStudentById(any())).thenReturn(Optional.of(UserDTO.builder().build()));
+        when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.just(UserDTO.builder().build()));
+        when(mockLessonProvider.findLessonById(any())).thenReturn(Mono.empty());
 
         // WHEN
-        service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
+        StepVerifier.create(mono).expectNextCount(1).verifyComplete();
         verify(mockLessonProvider).findLessonById(lessonId);
     }
 
@@ -96,15 +108,19 @@ class GradeValidationImplTest {
         // GIVEN
         final var lessonId = UUID.fromString("00000000-0000-0000-0000-000000000002");
         final var gradeDTO = GradeDTO.builder().lessonId(lessonId).grade(50).build();
-        when(mockStudentProvider.findStudentById(any())).thenReturn(Optional.of(UserDTO.builder().build()));
-        when(mockLessonProvider.findLessonById(any())).thenReturn(Optional.empty());
+        when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.just(UserDTO.builder().build()));
+        when(mockLessonProvider.findLessonById(any())).thenReturn(Mono.empty());
 
         // WHEN
-        final var result = service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
-        assertFalse(result.isValid());
-        assertThat(result.getMessage()).isEqualTo("Lesson '00000000-0000-0000-0000-000000000002' not found!");
+        StepVerifier.create(mono)
+                .assertNext(result -> {
+                    assertFalse(result.isValid());
+                    assertThat(result.getMessage()).isEqualTo("Lesson '00000000-0000-0000-0000-000000000002' not found!");
+                })
+                .verifyComplete();
     }
 
     @ParameterizedTest
@@ -112,15 +128,19 @@ class GradeValidationImplTest {
     void validateGrade_grade_checkResult(final Integer grade, final ValidationResult validationResult) {
         // GIVEN
         final var gradeDTO = GradeDTO.builder().grade(grade).build();
-        lenient().when(mockStudentProvider.findStudentById(any())).thenReturn(Optional.of(UserDTO.builder().build()));
-        lenient().when(mockLessonProvider.findLessonById(any())).thenReturn(Optional.of(LessonDTO.builder().build()));
+        lenient().when(mockStudentProvider.findStudentById(any())).thenReturn(Mono.just(UserDTO.builder().build()));
+        lenient().when(mockLessonProvider.findLessonById(any())).thenReturn(Mono.just(LessonDTO.builder().build()));
 
         // WHEN
-        final var result = service.validateGrade(gradeDTO);
+        final var mono = service.validateGrade(gradeDTO);
 
         // THEN
-        assertThat(result.isValid()).isEqualTo(validationResult.isValid());
-        assertThat(result.getMessage()).isEqualTo(validationResult.getMessage());
+        StepVerifier.create(mono)
+                .assertNext(result -> {
+                    assertThat(result.isValid()).isEqualTo(validationResult.isValid());
+                    assertThat(result.getMessage()).isEqualTo(validationResult.getMessage());
+                })
+                .verifyComplete();
     }
 
     private static Stream<Arguments> gradesSource() {

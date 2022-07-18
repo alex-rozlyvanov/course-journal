@@ -13,7 +13,7 @@ public class TokenInterceptor implements ClientHttpRequestInterceptor {
 
     private final String token;
 
-    @Override
+
     public ClientHttpResponse intercept(final HttpRequest request,
                                         final byte[] body,
                                         final ClientHttpRequestExecution execution) throws IOException {

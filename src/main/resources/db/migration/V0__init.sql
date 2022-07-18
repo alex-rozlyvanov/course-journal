@@ -1,6 +1,8 @@
+CREATE
+EXTENSION IF NOT EXISTS "uuid-ossp";
 create table feedbacks
 (
-    id         uuid not null,
+    id         uuid not null DEFAULT uuid_generate_v4(),
     course_id  uuid not null,
     notes      varchar(255),
     student_id uuid not null,
@@ -8,7 +10,7 @@ create table feedbacks
 );
 create table files
 (
-    id           uuid not null,
+    id           uuid not null DEFAULT uuid_generate_v4(),
     content_type varchar(255),
     data         oid,
     lesson_id    uuid,
@@ -19,7 +21,7 @@ create table files
 );
 create table grades
 (
-    id         uuid not null,
+    id         uuid not null DEFAULT uuid_generate_v4(),
     grade      int4 not null,
     lesson_id  uuid not null,
     student_id uuid not null,

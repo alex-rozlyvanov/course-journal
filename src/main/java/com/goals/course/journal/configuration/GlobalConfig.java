@@ -3,15 +3,14 @@ package com.goals.course.journal.configuration;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.Clock;
 import java.time.ZoneOffset;
 
 @Configuration
 public class GlobalConfig {
+
 
     @Bean
     public Clock clock() {
@@ -20,17 +19,14 @@ public class GlobalConfig {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate(final TokenInterceptor testInterceptor) {
-        final var restTemplate = new RestTemplate();
-        final var interceptors = restTemplate.getInterceptors();
-        interceptors.add(testInterceptor);
-        return restTemplate;
+    public WebClient.Builder webClientBuilder(final AddTokenFilter addTokenFilter) {
+        return WebClient.builder()
+                .filter(addTokenFilter);
     }
 
     @Bean
-    @RequestScope
-    public TokenInterceptor testInterceptor(final HttpServletRequest request) {
-        return new TokenInterceptor(request.getHeader("Authorization"));
+    public WebClient webClient(final WebClient.Builder builder) {
+        return builder.build();
     }
 
 }

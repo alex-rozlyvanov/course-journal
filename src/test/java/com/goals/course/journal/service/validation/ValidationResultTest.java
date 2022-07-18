@@ -1,4 +1,4 @@
-package com.goals.course.journal.service.validation.implementation;
+package com.goals.course.journal.service.validation;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,4 +33,3 @@ class ValidationResultTest {
     }
 
 }
-

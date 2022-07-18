@@ -2,24 +2,19 @@ package com.goals.course.journal.dao.entity;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.*;
 import java.util.UUID;
 
 @Data
-@Entity
 @Accessors(chain = true)
-@Table(name = "files")
+@Table("files")
 public class FileEntity {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
-    @Column(updatable = false, nullable = false)
+    @Column
     private UUID id;
 
     private String name;
@@ -32,7 +27,6 @@ public class FileEntity {
 
     private UUID studentId;
 
-    @Lob
     private byte[] data;
 
 }

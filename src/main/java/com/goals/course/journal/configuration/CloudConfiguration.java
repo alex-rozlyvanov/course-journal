@@ -40,7 +40,7 @@ public class CloudConfiguration implements BeanPostProcessor {
         }
     }
 
-    @Override
+
     public Object postProcessAfterInitialization(Object bean, String beanName) {
         if (bean instanceof EurekaInstanceConfigBean instanceConfigBean) {
             log.info("EurekaInstanceConfigBean detected. Setting IP address to " + fargateIp);

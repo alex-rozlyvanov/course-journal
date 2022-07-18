@@ -1,4 +1,4 @@
-package com.goals.course.journal.controller.implementation;
+package com.goals.course.journal.controller;
 
 import com.goals.course.journal.dto.FileResponse;
 import com.goals.course.journal.dto.UserDTO;
@@ -10,19 +10,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class FileControllerImplTest {
+class FileControllerTest {
     @Mock
     private FileService mockFileService;
 
     @InjectMocks
-    private FileControllerImpl service;
+    private FileController service;
 
     @Test
     void upload_callSave() {
@@ -50,12 +51,14 @@ class FileControllerImplTest {
         when(mockAuthentication.getPrincipal()).thenReturn(UserDTO.builder().build());
 
         final var fileResponse = FileResponse.builder().name("testFile").build();
-        when(mockFileService.save(any(), any(), any())).thenReturn(fileResponse);
+        when(mockFileService.save(any(), any(), any())).thenReturn(Mono.just(fileResponse));
 
         // WHEN
-        final var result = service.upload(null, null, mockAuthentication);
+        final var mono = service.upload(null, null, mockAuthentication);
 
         // THEN
-        assertThat(result).isSameAs(fileResponse);
+        StepVerifier.create(mono)
+                .expectNext(fileResponse)
+                .verifyComplete();
     }
 }

@@ -10,7 +10,7 @@ buildscript {
 plugins {
     id 'java'
     id 'org.springframework.boot' version "${springBootVersion}"
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.12.RELEASE'
     id 'org.springframework.cloud.contract' version '3.0.4'
 }
 
@@ -49,30 +49,36 @@ check.dependsOn integrationTest
 
 contracts {
     baseClassForTests = 'com.goals.course.journal.ContractVerifierBaseTestClass'
+    testMode = 'WEBTESTCLIENT'
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'io.r2dbc:r2dbc-postgresql'
+    runtimeOnly 'io.r2dbc:r2dbc-pool'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
+    testImplementation 'io.projectreactor:reactor-test:3.4.18'
 
 // =================================================================================
     integrationCompileOnly 'org.projectlombok:lombok'
     integrationTestAnnotationProcessor 'org.projectlombok:lombok'
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-    integrationTestImplementation 'org.postgresql:postgresql'
-    integrationTestImplementation 'org.testcontainers:testcontainers:1.16.0'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.16.0'
+    integrationTestRuntimeOnly 'org.postgresql:postgresql'
+    integrationTestRuntimeOnly 'io.r2dbc:r2dbc-postgresql'
+    integrationTestRuntimeOnly 'io.r2dbc:r2dbc-pool'
+    integrationTestImplementation 'org.testcontainers:testcontainers:1.17.2'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.17.2'
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-webflux'
     integrationTestImplementation 'org.springframework.security:spring-security-test'
     integrationTestImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock'
@@ -81,6 +87,7 @@ dependencies {
     contractTestRuntimeOnly 'org.postgresql:postgresql'
     contractTestImplementation 'org.testcontainers:postgresql:1.16.0'
     contractTestImplementation 'org.testcontainers:testcontainers:1.16.0'
+    contractTestImplementation 'io.rest-assured:spring-web-test-client:5.1.1'
     contractTestImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

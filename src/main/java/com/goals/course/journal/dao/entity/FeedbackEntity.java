@@ -2,32 +2,27 @@ package com.goals.course.journal.dao.entity;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
-import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.*;
 import java.util.UUID;
 
 @Data
-@Entity
 @Accessors(chain = true)
-@Table(name = "feedbacks")
+@Table("feedbacks")
 public class FeedbackEntity {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(
-            name = "UUID",
-            strategy = "org.hibernate.id.UUIDGenerator"
-    )
-    @Column(updatable = false, nullable = false)
+    @Column
     private UUID id;
 
-    @Column(updatable = false, nullable = false)
+    @Column
     private UUID courseId;
 
-    @Column(updatable = false, nullable = false)
+    @Column
     private UUID studentId;
 
-    @Column(name = "notes")
+    @Column
     private String notes;
 
 }

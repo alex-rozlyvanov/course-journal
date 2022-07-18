@@ -8,9 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ServerWebExchange;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -23,27 +22,29 @@ public class GlobalControllerExceptionHandler {
     private final Clock clock;
 
     @ExceptionHandler(HttpClientErrorException.class)
-    protected ResponseEntity<ErrorResponse> handleConflict(final HttpClientErrorException ex, WebRequest request) {
-        final var errorResponse = buildErrorResponse(ex, (ServletWebRequest) request, ex.getStatusCode());
+    protected ResponseEntity<ErrorResponse> handleConflict(final HttpClientErrorException ex,
+                                                           final ServerWebExchange exchange) {
+        final var errorResponse = buildErrorResponse(ex, exchange, ex.getStatusCode());
 
-        logError(ex, request);
+        logError(ex, exchange);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    protected ResponseEntity<ErrorResponse> handleIllegalStateException(final IllegalStateException ex, WebRequest request) {
-        final var errorResponse = buildErrorResponse(ex, (ServletWebRequest) request, HttpStatus.BAD_REQUEST);
+    protected ResponseEntity<ErrorResponse> handleIllegalStateException(final IllegalStateException ex,
+                                                                        final ServerWebExchange exchange) {
+        final var errorResponse = buildErrorResponse(ex, exchange, HttpStatus.BAD_REQUEST);
 
-        logError(ex, request);
+        logError(ex, exchange);
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     private ErrorResponse buildErrorResponse(final Exception ex,
-                                             final ServletWebRequest request,
+                                             final ServerWebExchange exchange,
                                              final HttpStatus httpStatus) {
-        final var path = request.getRequest().getRequestURI();
+        final var path = exchange.getRequest().getURI().toString();
 
         return ErrorResponse.builder()
                 .timestamp(ZonedDateTime.now(clock))
@@ -53,8 +54,8 @@ public class GlobalControllerExceptionHandler {
                 .build();
     }
 
-    private void logError(final Exception e, final WebRequest request) {
-        log.error("Route: {}. Error message: {}", ((ServletWebRequest) request).getRequest().getRequestURI(), e.getMessage());
+    private void logError(final Exception e, final ServerWebExchange exchange) {
+        log.error("Route: {}. Error message: {}", exchange.getRequest().getURI(), e.getMessage());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

@@ -1,18 +1,37 @@
 package com.goals.course.journal.service;
 
 import com.goals.course.journal.dao.entity.FileEntity;
+import com.goals.course.journal.dao.repository.FileRepository;
 import com.goals.course.journal.dto.FileResponse;
+import com.goals.course.journal.mapper.FileMapper;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-public interface FileService {
+@Slf4j
+@Service
+@AllArgsConstructor
+public class FileService {
+    private final FileRepository fileRepository;
+    private final FileMapper fileMapper;
 
-    FileResponse save(final MultipartFile file, final UUID lessonId, final UUID userId);
+    public Mono<FileResponse> save(final MultipartFile file, final UUID lessonId, final UUID userId) {
+        final var fileEntity = fileMapper.mapToFileEntity(file, lessonId, userId);
 
-    Optional<FileEntity> getFile(final UUID id);
+        return fileRepository.save(fileEntity)
+                .map(fileMapper::mapToFileResponse);
+    }
 
-    List<FileEntity> getAllFiles();
+    public Mono<FileEntity> getFile(final UUID id) {
+        return fileRepository.findById(id);
+    }
+
+    public Flux<FileEntity> getAllFiles() {
+        return fileRepository.findAll();
+    }
 }
