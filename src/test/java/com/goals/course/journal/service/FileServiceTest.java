@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -31,18 +31,20 @@ class FileServiceTest {
     @Test
     void save_callMapToFileEntity() {
         // GIVEN
-        final var mockMultipartFile = mock(MultipartFile.class);
+        when(mockFileMapper.mapToFileEntity(any(), any(), any())).thenReturn(Mono.just(new FileEntity()));
+
+        final var mockFilePart = mock(FilePart.class);
         final var lessonId = UUID.fromString("00000000-0000-0000-0000-000000000001");
         final var userId = UUID.fromString("00000000-0000-0000-0000-000000000002");
         when(mockFileRepository.save(any())).thenReturn(Mono.just(new FileEntity()));
         when(mockFileMapper.mapToFileResponse(any())).thenReturn(FileResponse.builder().build());
 
         // WHEN
-        final var mono = service.save(mockMultipartFile, lessonId, userId);
+        final var mono = service.save(mockFilePart, lessonId, userId);
 
         // THEN
         StepVerifier.create(mono).expectNextCount(1).verifyComplete();
-        verify(mockFileMapper).mapToFileEntity(mockMultipartFile, lessonId, userId);
+        verify(mockFileMapper).mapToFileEntity(mockFilePart, lessonId, userId);
     }
 
     @Test
@@ -51,18 +53,21 @@ class FileServiceTest {
         when(mockFileRepository.save(any())).thenReturn(Mono.just(new FileEntity()));
 
         final var fileEntity = new FileEntity().setId(UUID.fromString("00000000-0000-0000-0000-000000000003"));
-        when(mockFileMapper.mapToFileEntity(any(), any(), any())).thenReturn(fileEntity);
+        when(mockFileMapper.mapToFileEntity(any(), any(), any())).thenReturn(Mono.just(fileEntity));
+        when(mockFileMapper.mapToFileResponse(any())).thenReturn(FileResponse.builder().build());
 
         // WHEN
-        service.save(null, null, null);
+        final var mono = service.save(null, null, null);
 
         // THEN
+        StepVerifier.create(mono).expectNextCount(1).verifyComplete();
         verify(mockFileRepository).save(fileEntity);
     }
 
     @Test
     void save_callMapToFileResponse() {
         // GIVEN
+        when(mockFileMapper.mapToFileEntity(any(), any(), any())).thenReturn(Mono.just(new FileEntity()));
         final var savedFileEntity = new FileEntity().setId(UUID.fromString("00000000-0000-0000-0000-000000000003"));
         when(mockFileRepository.save(any())).thenReturn(Mono.just(savedFileEntity));
         when(mockFileMapper.mapToFileResponse(any())).thenReturn(FileResponse.builder().build());
@@ -78,6 +83,7 @@ class FileServiceTest {
     @Test
     void save_checkResult() {
         // GIVEN
+        when(mockFileMapper.mapToFileEntity(any(), any(), any())).thenReturn(Mono.just(new FileEntity()));
         when(mockFileRepository.save(any())).thenReturn(Mono.just(new FileEntity()));
 
         final var fileResponse = FileResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000003")).build();

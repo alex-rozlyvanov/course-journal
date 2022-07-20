@@ -12,7 +12,7 @@ create table files
 (
     id           uuid not null DEFAULT uuid_generate_v4(),
     content_type varchar(255),
-    data         oid,
+    data         bytea,
     lesson_id    uuid,
     name         varchar(255),
     size         int8,

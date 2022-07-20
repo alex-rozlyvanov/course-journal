@@ -59,12 +59,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
+    implementation 'org.springframework:spring-jdbc'
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'io.r2dbc:r2dbc-postgresql'
     runtimeOnly 'io.r2dbc:r2dbc-pool'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    // JAX-B dependencies for JDK 9+
+    implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
+    implementation "org.glassfish.jaxb:jaxb-runtime:2.3.2"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'

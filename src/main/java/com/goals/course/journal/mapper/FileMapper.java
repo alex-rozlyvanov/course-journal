@@ -5,10 +5,13 @@ import com.goals.course.journal.dto.FileResponse;
 import com.goals.course.journal.exception.FileCannotBeUploaded;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.Arrays;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import static org.springframework.util.StringUtils.hasLength;
@@ -27,27 +30,33 @@ public class FileMapper {
                 .build();
     }
 
-    public FileEntity mapToFileEntity(final MultipartFile file, final UUID lessonId, final UUID userId) {
-        return new FileEntity()
-                .setName(getFileName(file))
-                .setContentType(file.getContentType())
-                .setData(getFileBytes(file))
-                .setLessonId(lessonId)
-                .setStudentId(userId)
-                .setSize(file.getSize());
+    public Mono<FileEntity> mapToFileEntity(final FilePart filePart, final UUID lessonId, final UUID userId) {
+        return filePart
+                .content()
+                .map(this::getBytes)
+                .reduce(Arrays::concatenate)
+                .map(bytes -> new FileEntity()
+                        .setName(getFileName(filePart))
+                        .setContentType(filePart.headers().getContentType().toString())
+                        .setData(bytes)
+                        .setLessonId(lessonId)
+                        .setStudentId(userId)
+                        .setSize((long) bytes.length));
     }
 
-    private byte[] getFileBytes(final MultipartFile file) {
-        try {
-            return file.getBytes();
-        } catch (IOException e) {
-            throw new FileCannotBeUploaded("Unable to read file bytes!", e);
-        }
+    private byte[] getBytes(DataBuffer dataBuffer) {
+        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+        dataBuffer.read(bytes);
+        DataBufferUtils.release(dataBuffer);
+
+        return bytes;
     }
 
-    private String getFileName(final MultipartFile file) {
-        if (hasLength(file.getOriginalFilename())) {
-            return file.getOriginalFilename();
+    private String getFileName(final FilePart filePart) {
+        final var filename = filePart.filename();
+
+        if (hasLength(filename)) {
+            return filename;
         }
 
         throw new FileCannotBeUploaded("Unable to upload file! File should have a name");

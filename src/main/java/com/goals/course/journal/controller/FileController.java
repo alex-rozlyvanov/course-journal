@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,12 +23,12 @@ public class FileController {
     private static final Mono<ResponseEntity<byte[]>> NOT_FOUND = Mono.just(ResponseEntity.notFound().build());
     private final FileService fileService;
 
-    @PostMapping
-    public Mono<FileResponse> upload(@RequestParam("file") final MultipartFile file,
-                                     @RequestParam("lesson_id") final UUID lessonId,
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Mono<FileResponse> upload(@RequestPart("file") final FilePart file,
+                                     @RequestPart("lesson_id") final String lessonId,
                                      final Authentication authentication) {
         final var userDetails = (UserDTO) authentication.getPrincipal();
-        return fileService.save(file, lessonId, userDetails.getId());
+        return fileService.save(file, UUID.fromString(lessonId), userDetails.getId());
     }
 
     @GetMapping
@@ -43,6 +43,7 @@ public class FileController {
                 .name(fileEntity.getName())
                 .contentType(fileEntity.getContentType())
                 .size(fileEntity.getSize())
+                .lessonId(fileEntity.getLessonId())
                 .build();
     }
 
@@ -54,6 +55,5 @@ public class FileController {
                         .contentType(MediaType.valueOf(fileEntity.getContentType()))
                         .body(fileEntity.getData()))
                 .switchIfEmpty(NOT_FOUND);
-
     }
 }

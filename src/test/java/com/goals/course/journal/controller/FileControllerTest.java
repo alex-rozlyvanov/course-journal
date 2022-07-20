@@ -8,8 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,18 +28,18 @@ class FileControllerTest {
     @Test
     void upload_callSave() {
         // GIVEN
-        final var mockMultipartFile = mock(MultipartFile.class);
-        final var lessonId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        final var mockFilePart = mock(FilePart.class);
+        final var lessonId = "00000000-0000-0000-0000-000000000001";
         final var mockAuthentication = mock(Authentication.class);
         final var userDTO = UserDTO.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000002")).build();
         when(mockAuthentication.getPrincipal()).thenReturn(userDTO);
 
         // WHEN
-        service.upload(mockMultipartFile, lessonId, mockAuthentication);
+        service.upload(mockFilePart, lessonId, mockAuthentication);
 
         // THEN
         verify(mockFileService).save(
-                mockMultipartFile,
+                mockFilePart,
                 UUID.fromString("00000000-0000-0000-0000-000000000001"),
                 UUID.fromString("00000000-0000-0000-0000-000000000002"));
     }
@@ -54,7 +54,7 @@ class FileControllerTest {
         when(mockFileService.save(any(), any(), any())).thenReturn(Mono.just(fileResponse));
 
         // WHEN
-        final var mono = service.upload(null, null, mockAuthentication);
+        final var mono = service.upload(null, "00000000-0000-0000-0000-000000000001", mockAuthentication);
 
         // THEN
         StepVerifier.create(mono)

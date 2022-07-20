@@ -11,6 +11,7 @@ import java.util.UUID;
 @Jacksonized
 public class FileResponse {
     private final UUID id;
+    private final UUID lessonId;
     private final String name;
     private final Long size;
     private final String contentType;
